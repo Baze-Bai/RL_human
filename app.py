@@ -1,8 +1,10 @@
 import json
 import os
+import re
 import time
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -10,6 +12,21 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+
+PROMPT_DATASET_PATH = Path(__file__).parent / "prompt_dataset.txt"
+
+
+def load_prompt_dataset() -> list[str]:
+    """Load example prompts from the bundled dataset file."""
+    if not PROMPT_DATASET_PATH.exists():
+        return []
+    raw = PROMPT_DATASET_PATH.read_text(encoding="utf-8")
+    prompts = []
+    for line in raw.strip().splitlines():
+        cleaned = re.sub(r"^\d+\.\s*", "", line.strip())
+        if cleaned:
+            prompts.append(cleaned)
+    return prompts
 
 
 def get_secret(key: str) -> str | None:
@@ -166,8 +183,19 @@ def main():
         st.header("Export")
         _render_export_section()
 
+    # ---- Example prompts --------------------------------------------------
+    example_prompts = load_prompt_dataset()
+    if example_prompts:
+        with st.expander("Example Prompts (click to use)", expanded=False):
+            for i, ep in enumerate(example_prompts):
+                if st.button(ep, key=f"example_{i}", use_container_width=True):
+                    st.session_state["prefill_prompt"] = ep
+                    st.rerun()
+
+    prefill = st.session_state.pop("prefill_prompt", "")
+
     # ---- Main area --------------------------------------------------------
-    prompt = st.text_area("Enter your prompt", height=120, key="prompt_input")
+    prompt = st.text_area("Enter your prompt", value=prefill, height=120, key="prompt_input")
 
     generate_disabled = not prompt.strip() or st.session_state.generation_locked
     if st.button("Generate Responses", type="primary", disabled=generate_disabled):
