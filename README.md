@@ -25,6 +25,18 @@ cp .env.example .env
 streamlit run app.py
 ```
 
+## Deploy to Streamlit Cloud
+
+1. Push this repo to GitHub.
+2. Go to [share.streamlit.io](https://share.streamlit.io) and create a new app pointing to `app.py`.
+3. Open **Settings → Secrets** and paste the contents of `.streamlit/secrets.toml.example`, filling in your real keys:
+   ```toml
+   DASHSCOPE_API_KEY = "sk-..."
+   SUPABASE_URL = "https://your-project.supabase.co"
+   SUPABASE_KEY = "your-anon-key"
+   ```
+4. The app reads secrets via `st.secrets` automatically — no `.env` file needed on the cloud.
+
 ## Supabase Setup (Optional)
 
 1. Create a project at [supabase.com](https://supabase.com).

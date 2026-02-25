@@ -11,6 +11,15 @@ from openai import OpenAI
 
 load_dotenv()
 
+
+def get_secret(key: str) -> str | None:
+    """Read a secret from st.secrets (Streamlit Cloud) or fall back to os.getenv (local)."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key)
+
+
 # ---------------------------------------------------------------------------
 # Supabase helpers (optional – gracefully degrades to local-only mode)
 # ---------------------------------------------------------------------------
@@ -23,8 +32,8 @@ def _get_supabase():
     if _supabase_client is not None:
         return _supabase_client
 
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    url = get_secret("SUPABASE_URL")
+    key = get_secret("SUPABASE_KEY")
     if not url or not key:
         return None
 
@@ -75,7 +84,7 @@ AVAILABLE_MODELS = [
 
 
 def get_openai_client() -> OpenAI | None:
-    api_key = os.getenv("DASHSCOPE_API_KEY")
+    api_key = get_secret("DASHSCOPE_API_KEY")
     if not api_key:
         return None
     return OpenAI(api_key=api_key, base_url=DASHSCOPE_BASE_URL)
